@@ -48,7 +48,7 @@ def is_reachable_uri(uri: str) -> bool:
         return False
 
 
-def download_from_uri(uri: str, out_dir: str) -> None:
+def download_from_uri(uri: str, out_dir: str) -> str:
 
     # get filename from URI
     filename = os.path.basename(uri)
@@ -60,8 +60,10 @@ def download_from_uri(uri: str, out_dir: str) -> None:
         with open(f"{out_filename}", "wb") as f:
             f.write(response.content)
             logger.info("Successfully downloaded [%s] to [%s]", uri, f"{out_filename}")
+            return out_filename
     else:
         logger.warning("Failed to download [%s]", uri)
+        return None
 
 
 def unzip_file(zip_path: str) -> None:
@@ -84,9 +86,14 @@ def download_and_unzip_from_uri(uri: str, out_dir: str) -> None:
     else:
         logger.info("URI [%s] is valid. Proceeding with download.", uri)
 
-    download_from_uri(uri, out_dir)
-    zip_path = f"{out_dir}/{os.path.basename(uri)}"
-    unzip_file(zip_path)
+    downloaded_file = download_from_uri(uri, out_dir)
+
+    if not downloaded_file:
+        logger.warning("Failed to download file from [%s]. Skipping unzip.", uri)
+        return
+    else:
+        logger.info("Successfully downloaded file from [%s]. Proceeding with unzip.", uri)
+        unzip_file(downloaded_file)
 
 
 def download_and_unzip_from_uris(uri_list: str, out_dir: str):
